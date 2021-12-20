@@ -1,5 +1,7 @@
-#PROBLEM: domain deletes from all of the domains of all of the states
-
+"""
+Project 2 by Jimena Gonzalez-Cotera and Alexandra Casas
+Fall 2021 Artificial Intelligence
+"""
 import pdb
 
 class State:
@@ -14,13 +16,18 @@ class CSP:
     def __init__(self):
         self.N = 0
         self.d = 0
-        self.regions = []
-        self.colors = []
-        self.map = []
-        self.state_tracker = []
-        self.assignments = {}
+        self.regions = []  #list of all the regions as given; doesn't change
+        self.colors = []   #list of all the colors as given; doesn't change
+        self.map = []  #map of neighbors
+        self.state_tracker = [] #keeps track of pointers to all states
+        self.assignments = {}  #assignments 
 
     def is_assignment_complete(self, assignments):
+        """
+        checks if assgnment is complete, 
+        returns 0 or 1 for true or false
+        CSP, dictionary --> bool 
+        """
         for state in self.regions:
             if assignments[state] != '':
                 pass
@@ -29,6 +36,11 @@ class CSP:
         return 1
 
     def is_value_consistent(self, var, value, assignments):
+        """
+        checks if value is consistent 
+        returns 0 or 1 for true or false
+        CSP, State, string, dictionary --> bool 
+        """
         index_var = 0
         for ii in range(len(self.regions)):
             if self.regions[ii] == var.name:
@@ -48,12 +60,13 @@ class CSP:
         Which variable should be assigned next?
         minimum remaining value heuristic : chooses variable with the smallest domain
         degree heuristic : chooses variable with the largest number of unassigned neighbors
+        CSP, dictionary --> State
         """
         min_domain_size = self.d
         neighbor_tracker = 0  # degree heuristic -- largest number of unassigned neighbors
         index_tracker = []  # holds the index of regions with smallest domain
-
-        for ii in range(len(self.state_tracker)):  # MRV
+        #MRV
+        for ii in range(len(self.state_tracker)):  
             if assignments[self.state_tracker[ii].name] == '':
                 if len(self.state_tracker[ii].domain) == min_domain_size:
                     index_tracker.append(ii)
@@ -64,7 +77,7 @@ class CSP:
 
         if len(index_tracker) == 1:
             return self.state_tracker[index_tracker[0]]
-
+        #degree heuristic
         largest_state_pos = index_tracker[0]
         for ii in range(len(index_tracker)):
             counter = 0
@@ -84,6 +97,7 @@ class CSP:
         """
         What inferences should be performed at each step in the search?
         apply forward checking
+        CSP, State, string, dictionary --> bool, list 
         """
         index_var = 0
         prev_domain = {}
@@ -99,61 +113,37 @@ class CSP:
         for state in self.state_tracker:
             prev_domain[state.name] = state.domain
     
-        """ for jj in range(len(self.state_tracker)):
-            prev_domain[self.state_tracker[jj]] = self.state_tracker[jj].domain
- """
-
         var_neighbors = self.map[index_var]
         for ii in range(len(var_neighbors)):
             if var_neighbors[ii] == '1':  # indicates adjacent state
                 name_neighbor = self.regions[ii] #find out name of the neighbor
-                print("neighbor is : " + name_neighbor ) #debug
+                #print("neighbor is : " + name_neighbor ) #debug
                 if assignments[name_neighbor] == '' and self.state_tracker[ii].domain == [value]:
                     return 0, prev_domain  # failure!
                 else:
                     #try:
-                    print(len(self.state_tracker[ii].domain))
+                    #print(len(self.state_tracker[ii].domain))
                     curr_state = self.state_tracker[ii]
                     temp_domain = []
                     for i in range(len(curr_state.domain)): 
-                        print("here")
                         if curr_state.domain[i] == value: 
-                                #self.state_tracker[ii].domain.pop(value)
-                                print("deleting from domain from domain")
-                                #temp_domain = []
                                 for elem in curr_state.domain: 
                                     if elem != value: 
                                         temp_domain.append(elem)
-                                #self.state_tracker[ii].domain[i].pop(value)
                         else:
-                            print("debug 1: __")
-                            print("value in domain : " + curr_state.domain[i])
-                            print("value : " + value )
-                            print("___")
-                    #self.state_tracker[ii].domain.remove(value)
-                    #except:
-                    #    pass
+                            pass
                 curr_state.domain = temp_domain 
         return 1, prev_domain
 
     def backtrack(self, assignments):
-        # import pdb; pdb.set_trace()
         if self.is_assignment_complete(assignments):
             return 1
         var = self.select_unassigned_variable(assignments)
-        print(var.name)
+        #print(var.name)
         for value in var.domain:
-            #pdb.set_trace()
             if self.is_value_consistent(var, value, assignments):
                 assignments[var.name] = value
-                if assignments[var.name] == value: print("worked, "+ var.name + " is now " + value)
-                # next, inference (optional)
                 inferences, prev_domain = self.inference(var, value, assignments)  # (0 or 1, prev_domain)
-                
-                #debug
-                print("___these are the new domains")
-                for var in self.state_tracker: 
-                    print("domain of " + var.name + " is : "  + " ".join(var.domain))
                 if inferences:
                     result = self.backtrack(assignments)
                     if result:
@@ -167,11 +157,12 @@ class CSP:
 
     def backtracking_search(self, assignment_start):
         result = self.backtrack(assignment_start)
-        print(result)
+        #print(result)
         return result
 
     def read_file(self, file_name):
         """
+        str --> array[array]
         input: file
         returns NxN array that will be used in the backtracking algorithm
         """
@@ -196,16 +187,16 @@ class CSP:
             return assignments
 
     def output_file(self, assignments):
-        #filename = input("Enter output file name: ")
-        filename = "delete.txt"
+        filename = input("Enter output file name: ")
+        #filename = "delete.txt"
         with open(filename, "w") as f:
             for key, value in assignments.items():
                 f.write(key + ' = ' + value + '\n')
 
 
 def main():
-    #f = input("Enter input file name: ")
-    f = "Input1.txt"
+    f = input("Enter input file name: ")
+    #f = "Input1.txt"
     csp = CSP()
     assignments = csp.read_file(f)
     csp.backtracking_search(assignments)
