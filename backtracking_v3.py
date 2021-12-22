@@ -186,6 +186,8 @@ class CSP:
             for i in range(self.N):  # reading NxN array
                 self.map.append(f.readline().strip('\n').split(" "))
 
+            for i in range(self.N):
+                print(" ".join(map[i]))
             assignments = {}
             # initializes object of type state
             for ii in range(len(self.regions)):

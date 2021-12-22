@@ -14,8 +14,8 @@ class State:
 
 class CSP:
     def __init__(self):
-        self.N = 0
-        self.d = 0
+        self.N = 0  #number of regions
+        self.d = 0  #number of colors
         self.regions = []  #list of all the regions as given; doesn't change
         self.colors = []   #list of all the colors as given; doesn't change
         self.map = []  #map of neighbors
@@ -42,13 +42,13 @@ class CSP:
         CSP, State, string, dictionary --> bool 
         """
         index_var = 0
-        for ii in range(len(self.regions)):
+        for ii in range(self.N):
             if self.regions[ii] == var.name:
                 index_var = ii
                 break
 
         var_neighbors = self.map[index_var]
-        for ii in range(len(var_neighbors)):
+        for ii in range(self.N):
             if var_neighbors[ii] == '1':
                 name_neighbor = self.regions[ii]
                 if assignments[name_neighbor] == value:
@@ -66,7 +66,7 @@ class CSP:
         neighbor_tracker = 0  # degree heuristic -- largest number of unassigned neighbors
         index_tracker = []  # holds the index of regions with smallest domain
         #MRV
-        for ii in range(len(self.state_tracker)):  
+        for ii in range(self.N):  
             if assignments[self.state_tracker[ii].name] == '':
                 if len(self.state_tracker[ii].domain) == min_domain_size:
                     index_tracker.append(ii)
@@ -114,9 +114,10 @@ class CSP:
             prev_domain[state.name] = state.domain
     
         var_neighbors = self.map[index_var]
-        for ii in range(len(var_neighbors)):
+        for ii in range(self.N):
             if var_neighbors[ii] == '1':  # indicates adjacent state
                 name_neighbor = self.regions[ii] #find out name of the neighbor
+                print("neighbor is : " + name_neighbor ) #debug
                 #print("neighbor is : " + name_neighbor ) #debug
                 if assignments[name_neighbor] == '' and self.state_tracker[ii].domain == [value]:
                     return 0, prev_domain  # failure!
@@ -126,12 +127,18 @@ class CSP:
                     curr_state = self.state_tracker[ii]
                     temp_domain = []
                     for i in range(len(curr_state.domain)): 
+                        print("here")
                         if curr_state.domain[i] == value: 
+                                print("deleting from domain from domain")
                                 for elem in curr_state.domain: 
                                     if elem != value: 
                                         temp_domain.append(elem)
                         else:
-                            pass
+                            print("debug 1: __")
+                            print("value in domain : " + curr_state.domain[i])
+                            print("value : " + value )
+                            print("___")
+                            #pass
                 curr_state.domain = temp_domain 
         return 1, prev_domain
 
@@ -139,11 +146,15 @@ class CSP:
         if self.is_assignment_complete(assignments):
             return 1
         var = self.select_unassigned_variable(assignments)
+        print(var.name)
         #print(var.name)
         for value in var.domain:
             if self.is_value_consistent(var, value, assignments):
                 assignments[var.name] = value
                 inferences, prev_domain = self.inference(var, value, assignments)  # (0 or 1, prev_domain)
+                print("___these are the new domains")
+                for var in self.state_tracker: 
+                    print("domain of " + var.name + " is : "  + " ".join(var.domain))
                 if inferences:
                     result = self.backtrack(assignments)
                     if result:
@@ -177,9 +188,12 @@ class CSP:
             for i in range(self.N):  # reading NxN array
                 self.map.append(f.readline().strip('\n').split(" "))
 
+            for i in range(self.N):
+                print(str(" ".join(self.map[i])))
+
             assignments = {}
             # initializes object of type state
-            for ii in range(len(self.regions)):
+            for ii in range(self.N):
                 state = State(self.regions[ii], self.colors)
                 assignments[self.regions[ii]] = ''
                 state.neighbors = self.map[ii].count('1')
